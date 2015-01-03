@@ -1,14 +1,6 @@
 document.addEventListener('DOMContentLoaded', function(){
-  configureSettings();
   new Game();
 });
-
-var KEY_CODES = {
-  LEFT: 37,
-  UP: 38,
-  RIGHT: 39,
-  DOWN: 40
-}
 
 var settings = {
   bindings: {}
@@ -24,21 +16,19 @@ function Game() {
 
   this.player1 = new Entity(300,200, 60, 15);
 
-  this.inputBuffer = {};
-
-  canvas.addEventListener('keydown', onKeyDown.bind(this));
-  canvas.addEventListener('keyup', onKeyUp.bind(this));
+  this.inputEngine = new InputEngine(canvas);
 
   window.setInterval(this.updateState.bind(this), 33);
 }
 
 Game.prototype.updateState = function() {
-  var newVelocity = new Vector(0, 0);
+  var actions = this.inputEngine.actions,
+      newVelocity = new Vector(0, 0);
 
-  if (this.inputBuffer.moveUp) newVelocity.y = -1;
-  if (this.inputBuffer.moveDown) newVelocity.y = 1;
-  if (this.inputBuffer.moveLeft) newVelocity.x = -1;
-  if (this.inputBuffer.moveRight) newVelocity.x = 1;
+  if (actions.moveUp) newVelocity.y = -1;
+  if (actions.moveDown) newVelocity.y = 1;
+  if (actions.moveLeft) newVelocity.x = -1;
+  if (actions.moveRight) newVelocity.x = 1;
   
   newVelocity.normalize();
   this.player1.velocity = newVelocity;
@@ -91,28 +81,5 @@ Vector.prototype.normalize = function() {
   if(magnitude !== 0) {
     this.x = this.x / magnitude;
     this.y = this.y / magnitude;
-  }
-}
-
-function configureSettings() {
-  window.settings.bindings[KEY_CODES.UP] = 'moveUp';
-  window.settings.bindings[KEY_CODES.DOWN] = 'moveDown';
-  window.settings.bindings[KEY_CODES.LEFT] = 'moveLeft';
-  window.settings.bindings[KEY_CODES.RIGHT] = 'moveRight';
-}
-
-function onKeyDown(event) {
-  event.preventDefault();
-  var action = window.settings.bindings[event.keyCode];
-  if (action) {
-    this.inputBuffer[action] = true;
-  }
-}
-
-function onKeyUp(event) {
-  event.preventDefault();
-  var action = window.settings.bindings[event.keyCode];
-  if (action) {
-    this.inputBuffer[action] = false;
   }
 }
