@@ -1,0 +1,19 @@
+body {
+    background-color: black;
+}
+
+.centered * {
+	margin: 0px auto;
+	text-align: center;
+}
+
+h1,p {
+    color: white;
+    font-family: "Helvetica", sans-serif;
+}
+
+canvas {
+	border-width: 5px;
+	border-style: solid;
+	border-color: white;
+}
