@@ -10,32 +10,43 @@ function Game() {
   this.ctx = canvas.getContext('2d');
   this.ctx.fillStyle = 'white';
 
-  this.player1 = new Player(100, 200);
+  this.players = [new Player(100, 200),
+                  new Player(500, 200)];
+
   this.ball = new Ball(300, 200, new Vector(1,2));
 
   this.inputEngine = new InputEngine(canvas);
+  this.startGame();
+}
 
-  window.setInterval(this.updateState.bind(this), 33);
+Game.prototype.startGame = function() {
+  this.intervalId = window.setInterval(this.updateState.bind(this), 33);
 }
 
 Game.prototype.updateState = function() {
-  var actions = this.inputEngine.actions,
-      newVelocity = new Vector(0, 0);
+  var actions = this.inputEngine.actions;
 
-  if (actions.moveUp) newVelocity.y = -1;
-  if (actions.moveDown) newVelocity.y = 1;
-  if (actions.moveLeft) newVelocity.x = -1;
-  if (actions.moveRight) newVelocity.x = 1;
-  
-  newVelocity.normalize();
-  this.player1.velocity = newVelocity;
+  this.players.forEach(function(player, index) {
+    this.updatePlayerVelocity(player, actions['player' + (index + 1)]);
+    this.checkPaddleCollision(player);
+    player.move();
+  }, this);
 
   this.checkWallCollisions();
-  this.checkPaddleCollisions();
-
-  this.player1.move();
   this.ball.move();
   this.render();
+}
+
+Game.prototype.updatePlayerVelocity = function(player, playerActions) {
+  var newVelocity = new Vector(0, 0);
+
+  if (playerActions.moveUp) newVelocity.y = -1;
+  if (playerActions.moveDown) newVelocity.y = 1;
+  if (playerActions.moveLeft) newVelocity.x = -1;
+  if (playerActions.moveRight) newVelocity.x = 1;
+  
+  newVelocity.normalize();
+  player.velocity = newVelocity;
 }
 
 Game.prototype.drawEntity = function(entity) {
@@ -44,14 +55,15 @@ Game.prototype.drawEntity = function(entity) {
 
 Game.prototype.render = function() {
   this.ctx.clearRect(0, 0, this.width, this.height);
-  this.drawEntity(this.player1);
   this.drawEntity(this.ball);
+  this.players.forEach(function(player) {
+    this.drawEntity(player);
+  }, this)
 }
 
 Game.prototype.checkWallCollisions = function() {
   var ballPos = this.ball.position,
-      ballVel = this.ball.velocity,
-      player1Pos = this.player1.position;
+      ballVel = this.ball.velocity;
 
   if (ballPos.x < 0) {
     ballVel.x = Math.abs(ballVel.x);
@@ -66,11 +78,11 @@ Game.prototype.checkWallCollisions = function() {
   }
 }
 
-Game.prototype.checkPaddleCollisions = function() {
-  var paddleCollision = this.ball.checkCollision(this.player1);
+Game.prototype.checkPaddleCollision = function(player) {
+  var paddleCollision = this.ball.checkCollision(player);
 
   if (paddleCollision) {
-    var newXDirection = (this.ball.position.x > this.player1.position.x) ? 1 : -1;
+    var newXDirection = (this.ball.position.x > player.position.x) ? 1 : -1;
     this.ball.velocity.x =  newXDirection * Math.abs(this.ball.velocity.x);
   }
 }
