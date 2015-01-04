@@ -9,44 +9,57 @@ function Game() {
   ctx.fillStyle = 'white';
   ctx.textAlign = 'center';
   ctx.font = '40px "Helvetica", sans-serif';
+
   this.ctx = ctx;
+  this.canvas = canvas;
 
   this.width = canvas.width;
   this.height = canvas.height;
 
-
-  this.ball = new Ball(300, 200, new Vector(-0.5,1));
-  this.players = [new Player(100, 200),
-                  new Player(500, 200)];
-
   this.inputEngine = new InputEngine(canvas);
+
+  this.initializeEntities();
   this.render();
 
   canvas.addEventListener('focus', this.startGame.bind(this));
   canvas.addEventListener('blur', this.stopGame.bind(this));
 }
 
+Game.prototype.initializeEntities = function() {
+  this.ball = new Ball(300, 200, new Vector(-0.5,1));
+  this.players = [new Player(100, 200),
+                  new Player(500, 200)];
+}
+
 Game.prototype.startGame = function() {
-  this.intervalId = window.setInterval(this.updateState.bind(this), 33);
+  if (!this.intervalId) {
+    this.intervalId = window.setInterval(this.updateState.bind(this), 33);
+  }
 }
 
 Game.prototype.stopGame = function() {
-  if (this.intervalId) window.clearInterval(this.intervalId);
+  if (this.intervalId) {
+    window.clearInterval(this.intervalId);  
+    delete this.intervalId;
+  }
 }
 
 Game.prototype.updateState = function() {
   var actions = this.inputEngine.actions;
 
   this.ball.move();
+  this.checkWallCollisions(this.ball);
+
   this.players.forEach(function(player, index) {
     this.updatePlayerVelocity(player, actions['player' + (index + 1)]);
-    this.checkPaddleCollision(player);
     player.move();
+    this.checkPaddleCollision(player);
+    this.checkWallCollisions(player);
   }, this);
 
-  this.checkWallCollisions();
-  this.checkScore();
   this.render();
+
+  this.checkScore();
 }
 
 Game.prototype.updatePlayerVelocity = function(player, playerActions) {
@@ -74,24 +87,21 @@ Game.prototype.render = function() {
   this.ctx.fillText(this.getScore(), 300, 50);
 }
 
-Game.prototype.checkWallCollisions = function() {
-  var ballPos = this.ball.position,
-      ballVel = this.ball.velocity;
+Game.prototype.checkWallCollisions = function(entity) {
+  var bb = entity.getBoundingBox(),
+      pos = entity.position,
+      halfHeight = entity.height/2;
 
-  if (ballPos.y < 0) {
-    ballVel.y = Math.abs(ballVel.x);
-  } else if (ballPos.y > this.height) {
-    ballVel.y = -Math.abs(ballVel.y);
+  // constrain all entities between the top and bottom walls
+  if (bb.top < 0) pos.y = halfHeight;
+  if (bb.bottom > this.height) pos.y = this.height - halfHeight;
+
+  // reflect all balls off the top and bottom walls
+  if (entity instanceof Ball) {
+    var ballVel = entity.velocity;
+    if (bb.top < 0) ballVel.y = Math.abs(ballVel.y);
+    if (bb.bottom > this.height) ballVel.y = -Math.abs(ballVel.y);
   }
-
-  this.players.forEach(function(player, index) {
-    var bb = player.getBoundingBox(),
-        pos = player.position,
-        halfHeight = player.height/2;
-
-    if (bb.top < 0) pos.y = halfHeight;
-    if (bb.bottom > this.height) pos.y = this.height - halfHeight;
-  }, this);
 }
 
 Game.prototype.checkPaddleCollision = function(player) {
@@ -115,13 +125,31 @@ Game.prototype.checkScore = function() {
 
 Game.prototype.awardPoints = function(player) {
   player.points++;
+  this.render();
   this.stopGame();
 
+  if (player.points < 5) {
+    this.resetBall();
+  } else {
+    this.endGame();
+  }
+}
+
+Game.prototype.resetBall = function() {
   this.ball.position = new Vector(300, 200);
   this.ball.velocity.x = -this.ball.velocity.x;
   this.render();
 
   window.setTimeout(this.startGame.bind(this), 500);
+}
+
+Game.prototype.endGame = function() {
+  var winner = (this.players[0].points > this.players[1].points) ? 'Player 1' : 'Player 2';
+  this.ctx.fillText(winner + " Wins!", 300, 200);
+
+  // reset for the next game
+  this.initializeEntities();
+  this.canvas.blur();
 }
 
 Game.prototype.getScore = function() {

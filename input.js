@@ -12,13 +12,13 @@ function InputEngine(canvas) {
     player2: {}
   };
 
-  this.initialize(canvas);
+  this.initialize();
 }
 
-InputEngine.prototype.initialize = function(canvas) {
+InputEngine.prototype.initialize = function() {
   this.__setupKeyBindings();
-  canvas.addEventListener('keydown', this.onKeyDown.bind(this));
-  canvas.addEventListener('keyup', this.onKeyUp.bind(this));
+  document.addEventListener('keydown', this.onKeyDown.bind(this));
+  document.addEventListener('keyup', this.onKeyUp.bind(this));
 }
 
 InputEngine.prototype.__setupKeyBindings = function() {
