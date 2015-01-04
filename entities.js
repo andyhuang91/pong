@@ -53,7 +53,8 @@ Entity.prototype.checkCollision = function(entity) {
 }
 
 function Player(xPos, yPos) {
-  Entity.call(this, xPos, yPos, settings.paddle.height, settings.paddle.width)
+  Entity.call(this, xPos, yPos, settings.paddle.height, settings.paddle.width);
+  this.points = 0;
 }
 
 Player.prototype = Object.create(Entity.prototype);

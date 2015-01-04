@@ -35,13 +35,13 @@ InputEngine.prototype.__setupKeyBindings = function() {
 
   this.bindings[KEY_CODES.W] = 'moveUp1';
   this.bindings[KEY_CODES.S] = 'moveDown1';
-  this.bindings[KEY_CODES.A] = 'moveLeft1';
-  this.bindings[KEY_CODES.D] = 'moveRight1';
+  //this.bindings[KEY_CODES.A] = 'moveLeft1';
+  //this.bindings[KEY_CODES.D] = 'moveRight1';
 
   this.bindings[KEY_CODES.UP] = 'moveUp2';
   this.bindings[KEY_CODES.DOWN] = 'moveDown2';
-  this.bindings[KEY_CODES.LEFT] = 'moveLeft2';
-  this.bindings[KEY_CODES.RIGHT] = 'moveRight2';
+  //this.bindings[KEY_CODES.LEFT] = 'moveLeft2';
+  //this.bindings[KEY_CODES.RIGHT] = 'moveRight2';
 }
 
 InputEngine.prototype.onKeyDown = function(event) {
