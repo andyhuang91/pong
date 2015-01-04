@@ -63,15 +63,14 @@ Game.prototype.updateState = function() {
 }
 
 Game.prototype.updatePlayerVelocity = function(player, playerActions) {
-  var newVelocity = new Vector(0, 0);
+  var newVelocityDirection = new Vector(0, 0);
 
-  if (playerActions.moveUp) newVelocity.y = -1;
-  if (playerActions.moveDown) newVelocity.y = 1;
-  if (playerActions.moveLeft) newVelocity.x = -1;
-  if (playerActions.moveRight) newVelocity.x = 1;
+  if (playerActions.moveUp) newVelocityDirection.y = -1;
+  if (playerActions.moveDown) newVelocityDirection.y = 1;
+  if (playerActions.moveLeft) newVelocityDirection.x = -1;
+  if (playerActions.moveRight) newVelocityDirection.x = 1;
   
-  newVelocity.normalize();
-  player.velocity = newVelocity;
+  player.setVelocityDirection(newVelocityDirection);
 }
 
 Game.prototype.drawEntity = function(entity) {
@@ -108,8 +107,11 @@ Game.prototype.checkPaddleCollision = function(player) {
   var paddleCollision = this.ball.checkCollision(player);
 
   if (paddleCollision) {
-    var newXDirection = (this.ball.position.x > player.position.x) ? 1 : -1;
-    this.ball.velocity.x =  newXDirection * Math.abs(this.ball.velocity.x);
+    var newXDirection = (this.ball.position.x > player.position.x) ? 1 : -1,
+        relativeYIntersect = (this.ball.position.y - player.position.y) / (player.height / 2),
+        bounceAngle = relativeYIntersect * 65 * (Math.PI / 180),
+        newDirection = new Vector(newXDirection * Math.cos(bounceAngle), Math.sin(bounceAngle));
+    this.ball.setVelocityDirection(newDirection);
   }
 }
 

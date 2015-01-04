@@ -13,14 +13,13 @@ function Entity(xPos, yPos, height, width) {
   this.height = height;
   this.width = width;
   this.velocity = new Vector(0, 0);
-  this.maxSpeed = 10;
 }
 
+Entity.prototype.maxSpeed = 10;
+
 Entity.prototype.move = function() {
-  if (this.velocity.getMagnitude() > 0) {
-    this.position.x += this.velocity.x * this.maxSpeed;
-    this.position.y += this.velocity.y * this.maxSpeed;
-  }
+  this.position.x += this.velocity.x;
+  this.position.y += this.velocity.y;
 }
 
 Entity.prototype.draw = function(ctx) {
@@ -52,6 +51,12 @@ Entity.prototype.checkCollision = function(entity) {
           myBB.bottom < otherBB.top);
 }
 
+Entity.prototype.setVelocityDirection = function(vector) {
+  vector.normalize();
+  vector.multiply(this.maxSpeed);
+  this.velocity = vector;
+}
+
 function Player(xPos, yPos) {
   Entity.call(this, xPos, yPos, settings.paddle.height, settings.paddle.width);
   this.points = 0;
@@ -59,9 +64,9 @@ function Player(xPos, yPos) {
 
 Player.prototype = Object.create(Entity.prototype);
 
-function Ball(xPos, yPos, initialVelocity) {
+function Ball(xPos, yPos, initialDirection) {
   Entity.call(this, xPos, yPos, settings.ball.radius, settings.ball.radius);
-  this.velocity = initialVelocity;
+  this.setVelocityDirection(initialDirection);
 }
 
 Ball.prototype = Object.create(Entity.prototype);
@@ -82,4 +87,9 @@ Vector.prototype.normalize = function() {
     this.x = this.x / magnitude;
     this.y = this.y / magnitude;
   }
+}
+
+Vector.prototype.multiply = function(number) {
+  this.x = this.x * number;
+  this.y = this.y * number;
 }
