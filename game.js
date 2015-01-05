@@ -2,7 +2,7 @@ document.addEventListener('DOMContentLoaded', function(){
   new Game();
 });
 
-function Game() {
+function Game(debugMode) {
   var canvas = document.getElementById('game-canvas')
       ctx = canvas.getContext('2d');
   
@@ -17,6 +17,9 @@ function Game() {
   this.height = canvas.height;
 
   this.inputEngine = new InputEngine(canvas);
+
+  // if true, renders additional AI information to the screen
+  this.debugMode = debugMode || false;
 
   this.audio = {
     paddle: document.getElementById("paddleAudio"),
@@ -34,7 +37,7 @@ function Game() {
 Game.prototype.initializeEntities = function() {
   this.ball = new Ball(300, 200, new Vector(-0.5,1));
   this.players = [new Player(100, 200),
-                  new Player(500, 200)];
+                  new AIPlayer(500,200)];
 }
 
 Game.prototype.startGame = function() {
@@ -51,13 +54,13 @@ Game.prototype.stopGame = function() {
 }
 
 Game.prototype.updateState = function() {
-  var actions = this.inputEngine.actions;
-
   this.ball.move();
   this.checkWallCollisions(this.ball);
 
   this.players.forEach(function(player, index) {
-    this.updatePlayerVelocity(player, actions['player' + (index + 1)]);
+    var playerActions = (player instanceof AIPlayer) ? player.computeActions(this.ball) :
+                                                       this.inputEngine.actions['player' + (index + 1)];
+    player.processActions(playerActions);
     player.move();
     this.checkPaddleCollision(player);
     this.checkWallCollisions(player);
@@ -66,17 +69,6 @@ Game.prototype.updateState = function() {
   this.render();
 
   this.checkScore();
-}
-
-Game.prototype.updatePlayerVelocity = function(player, playerActions) {
-  var newVelocityDirection = new Vector(0, 0);
-
-  if (playerActions.moveUp) newVelocityDirection.y = -1;
-  if (playerActions.moveDown) newVelocityDirection.y = 1;
-  if (playerActions.moveLeft) newVelocityDirection.x = -1;
-  if (playerActions.moveRight) newVelocityDirection.x = 1;
-  
-  player.setVelocityDirection(newVelocityDirection);
 }
 
 Game.prototype.drawEntity = function(entity) {
@@ -88,6 +80,10 @@ Game.prototype.render = function() {
   this.drawEntity(this.ball);
   this.players.forEach(function(player) {
     this.drawEntity(player);
+    if ((player instanceof AIPlayer) && this.debugMode) {
+      this.drawEntity(new Entity(player.position.x, player.getDesiredCollisionPos(), 5, 50));
+      this.drawEntity(new Entity(player.position.x, player.getPredictedBallPosition(this.ball), 2, 70));
+    }
   }, this)
   this.ctx.fillText(this.getScore(), 300, 50);
 }
@@ -121,6 +117,7 @@ Game.prototype.checkPaddleCollision = function(player) {
         bounceAngle = relativeYIntersect * 65 * (Math.PI / 180),
         newDirection = new Vector(newXDirection * Math.cos(bounceAngle), Math.sin(bounceAngle));
     this.ball.setVelocityDirection(newDirection);
+    if (player instanceof AIPlayer) player.aimNextShot();
     this.audio.paddle.play();
   }
 }
