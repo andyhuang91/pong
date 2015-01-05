@@ -1,17 +1,27 @@
-body {
+* {
     background-color: black;
-}
-
-.centered * {
-	margin: 0px auto;
-	text-align: center;
-}
-
-h1,p {
     color: white;
     font-family: "Helvetica", sans-serif;
 }
 
+.centered * {
+	margin: 0.2em auto;
+	text-align: center;
+}
+
+.button-container {
+	margin-top: 1.5em;
+}
+
+button {
+	border: none;
+	font-size: 1em;
+	text-decoration: underline;
+}
+
+button:hover, button:hover span {
+	color: #AAAAAA;
+}
 canvas {
 	border-width: 5px;
 	border-style: solid;

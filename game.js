@@ -3,7 +3,8 @@ document.addEventListener('DOMContentLoaded', function(){
 });
 
 function Game(debugMode) {
-  var canvas = document.getElementById('game-canvas')
+  var canvas = document.getElementById('game-canvas'),
+      switchPlayersButton = document.getElementById('switch-players-btn'),
       ctx = canvas.getContext('2d');
   
   ctx.fillStyle = 'white';
@@ -20,6 +21,7 @@ function Game(debugMode) {
 
   // if true, renders additional AI information to the screen
   this.debugMode = debugMode || false;
+  this.multiplayer = false;
 
   this.audio = {
     paddle: document.getElementById("paddleAudio"),
@@ -32,12 +34,14 @@ function Game(debugMode) {
 
   canvas.addEventListener('focus', this.startGame.bind(this));
   canvas.addEventListener('blur', this.stopGame.bind(this));
+
+  switchPlayersButton.addEventListener('click', this.switchNumPlayers.bind(this));
 }
 
 Game.prototype.initializeEntities = function() {
   this.ball = new Ball(300, 200, new Vector(-0.5,1));
-  this.players = [new Player(100, 200),
-                  new AIPlayer(500,200)];
+  this.players = this.multiplayer ? [new Player(100, 200), new Player(500,200)] :
+                                    [new Player(100, 200), new AIPlayer(500,200)];
 }
 
 Game.prototype.startGame = function() {
@@ -51,6 +55,14 @@ Game.prototype.stopGame = function() {
     window.clearInterval(this.intervalId);  
     delete this.intervalId;
   }
+}
+
+Game.prototype.switchNumPlayers = function() {
+  this.stopGame();
+  this.multiplayer = !this.multiplayer;
+  document.getElementById('other-mode').innerHTML = this.multiplayer ? 'single player' : 'two player';
+  this.initializeEntities();
+  this.render();
 }
 
 Game.prototype.updateState = function() {
