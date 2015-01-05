@@ -18,6 +18,12 @@ function Game() {
 
   this.inputEngine = new InputEngine(canvas);
 
+  this.audio = {
+    paddle: document.getElementById("paddleAudio"),
+    point: document.getElementById("pointAudio"),
+    wall: document.getElementById("wallAudio")
+  };
+
   this.initializeEntities();
   this.render();
 
@@ -89,17 +95,20 @@ Game.prototype.render = function() {
 Game.prototype.checkWallCollisions = function(entity) {
   var bb = entity.getBoundingBox(),
       pos = entity.position,
-      halfHeight = entity.height/2;
+      halfHeight = entity.height/2,
+      topCollision = bb.top < 0,
+      bottomCollision = bb.bottom > this.height;
 
   // constrain all entities between the top and bottom walls
-  if (bb.top < 0) pos.y = halfHeight;
-  if (bb.bottom > this.height) pos.y = this.height - halfHeight;
+  if (topCollision) pos.y = halfHeight;
+  if (bottomCollision) pos.y = this.height - halfHeight;
 
   // reflect all balls off the top and bottom walls
   if (entity instanceof Ball) {
     var ballVel = entity.velocity;
-    if (bb.top < 0) ballVel.y = Math.abs(ballVel.y);
-    if (bb.bottom > this.height) ballVel.y = -Math.abs(ballVel.y);
+    if (topCollision) ballVel.y = Math.abs(ballVel.y);
+    if (bottomCollision) ballVel.y = -Math.abs(ballVel.y);
+    if (topCollision || bottomCollision) this.audio.wall.play();
   }
 }
 
@@ -112,6 +121,7 @@ Game.prototype.checkPaddleCollision = function(player) {
         bounceAngle = relativeYIntersect * 65 * (Math.PI / 180),
         newDirection = new Vector(newXDirection * Math.cos(bounceAngle), Math.sin(bounceAngle));
     this.ball.setVelocityDirection(newDirection);
+    this.audio.paddle.play();
   }
 }
 
@@ -127,6 +137,7 @@ Game.prototype.checkScore = function() {
 
 Game.prototype.awardPoints = function(player) {
   player.points++;
+  this.audio.point.play();
   this.render();
   this.stopGame();
 
